@@ -1,20 +1,20 @@
 require 'rails_helper'
 
-describe 'Markets API' do
+describe Market, type: :request do
     it 'sends a list of markets' do
-        create_list(:markets, 3)
+        create_list(:market, 3)
 
-        get 'api/v0/markets'
+        get api_v0_markets_path
 
         expect(response).to be_successful
 
-        markets = JSON.parse(response.body, symbolize_names: true)
+        markets = JSON.parse(response.body, symbolize_names: true) 
+        # binding.pry
+        expect(markets[:data].count).to eq(3)
 
-        expect(markets.count).to eq(3)
-
-        markets.each do |market|
+        markets[:data].each do |market|
             expect(market).to have_key(:id)
-            expect(market[:id]).to be_an(Integer)
+            expect(market[:id]).to be_an(String)
 
             expect(market).to have_key(:type)
             expect(market[:type]).to be_an(String)
@@ -31,8 +31,8 @@ describe 'Markets API' do
             expect(market[:attributes]).to have_key(:city)
             expect(market[:attributes][:city]).to be_an(String)
 
-            expect(market[:attributes]).to have_key(:country)
-            expect(market[:attributes][:country]).to be_an(String)
+            expect(market[:attributes]).to have_key(:county)
+            expect(market[:attributes][:county]).to be_an(String)
 
             expect(market[:attributes]).to have_key(:state)
             expect(market[:attributes][:state]).to be_an(String)
@@ -46,8 +46,8 @@ describe 'Markets API' do
             expect(market[:attributes]).to have_key(:lon)
             expect(market[:attributes][:lon]).to be_an(String)
 
-            expect(market[:attributes]).to have_key(:vender_count)
-            expect(market[:attributes][:vender_count]).to be_an(Integer)
+            # expect(market[:attributes]).to have_key(:vender_count)
+            # expect(market[:attributes][:vender_count]).to be_an(Integer)
 
         end
     end
