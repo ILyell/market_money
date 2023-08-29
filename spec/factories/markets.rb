@@ -1,7 +1,6 @@
 FactoryBot.define do
     factory :market do
 
-        id  { Faker::Number.number(digits: 5) }
         name { Faker::Restaurant.name }
         street { Faker::Address.street_address }
         city { Faker::Address.city }
@@ -10,6 +9,6 @@ FactoryBot.define do
         zip { Faker::Address.zip }
         lat { Faker::Address.latitude }
         lon { Faker::Address.longitude }
-
+        
     end
 end

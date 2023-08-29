@@ -4,6 +4,10 @@ class Api::V0::MarketsController < ApplicationController
     end
 
     def show
-        render json: MarketSerializer.new(Market.find(params[:id]))
+        begin
+            render json: MarketSerializer.new(Market.find(params[:id]))
+        rescue ActiveRecord::RecordNotFound => e
+            render :json => { errors: e.message }, status: :not_found 
+        end
     end
 end

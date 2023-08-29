@@ -48,8 +48,8 @@ describe Market, type: :request do
             expect(market[:attributes]).to have_key(:lon)
             expect(market[:attributes][:lon]).to be_an(String)
 
-            # expect(market[:attributes]).to have_key(:vender_count)
-            # expect(market[:attributes][:vender_count]).to be_an(Integer)
+            expect(market[:attributes]).to have_key(:vendor_count)
+            expect(market[:attributes][:vendor_count]).to be_an(Integer)
 
         end
     end
@@ -99,15 +99,67 @@ describe Market, type: :request do
         expect(market[:attributes]).to have_key(:lon)
         expect(market[:attributes][:lon]).to be_an(String)
 
-        # expect(market[:attributes]).to have_key(:vender_count)
-        # expect(market[:attributes][:vender_count]).to be_an(Integer)
+        expect(market[:attributes]).to have_key(:vendor_count)
+        expect(market[:attributes][:vendor_count]).to be_an(Integer)
     end
 
-    xit 'Returns an error when there is no market with that id' do
+    it 'Returns an error when there is no market with that id' do
         
         get api_v0_market_path(12345)
+
+        expect(response).to have_http_status(404)
+
+    end
+
+    it 'Returns a list of vendors associated with that market' do
+        create(:market)
+        market = Market.first
+        create_list(:vendor, 3)
+        vendors = Vendor.all
+
+        create(:market_vendor, market: market, vendor: vendors[0])
+        create(:market_vendor, market: market, vendor: vendors[1])
+        create(:market_vendor, market: market, vendor: vendors[2])
+
+        get api_v0_market_vendors_path(market)
+
+        vendors = JSON.parse(response.body, symbolize_names: true) 
+
+        expect(vendors).to have_key(:data)
+        expect(vendors[:data].count).to eq(3)
+
+        vendors[:data].each do |vendor|
+            expect(vendor).to have_key(:id)
+            expect(vendor[:id]).to be_an(String)
+
+            expect(vendor).to have_key(:type)
+            expect(vendor[:type]).to be_an(String)
+
+            expect(vendor).to have_key(:attributes)
+            expect(vendor[:attributes]).to be_an(Hash)
+
+            expect(vendor[:attributes]).to have_key(:name)
+            expect(vendor[:attributes][:name]).to be_an(String)
+
+            expect(vendor[:attributes]).to have_key(:description)
+            expect(vendor[:attributes][:description]).to be_an(String)
+
+            expect(vendor[:attributes]).to have_key(:contact_name)
+            expect(vendor[:attributes][:contact_name]).to be_an(String)
+
+            expect(vendor[:attributes]).to have_key(:contact_phone)
+            expect(vendor[:attributes][:contact_phone]).to be_an(String)
+
+            expect(vendor[:attributes]).to have_key(:credit_accepted)
+            expect(vendor[:attributes][:credit_accepted]).to be(true).or be(false)
+        end
+    end  
+
+    it 'Returns an error when there is no market with that id for returning vendors' do
         
-        error = JSON.parse(response.body, symbolize_names: true)
+        get api_v0_market_vendors_path(12345)
+
+        expect(response).to have_http_status(404)
 
     end
 end
