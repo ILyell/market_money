@@ -102,4 +102,12 @@ describe Market, type: :request do
         # expect(market[:attributes]).to have_key(:vender_count)
         # expect(market[:attributes][:vender_count]).to be_an(Integer)
     end
+
+    xit 'Returns an error when there is no market with that id' do
+        
+        get api_v0_market_path(12345)
+        
+        error = JSON.parse(response.body, symbolize_names: true)
+
+    end
 end
