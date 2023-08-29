@@ -44,6 +44,73 @@ RSpec.describe Vendor, type: :request do
         get api_v0_vendor_path(11251)
 
         expect(response).to have_http_status(404)
+        error = JSON.parse(response.body, symbolize_names: true)
 
+        expect(error[:errors]).to eq("Couldn't find Vendor with 'id'=11251")
+
+    end
+
+    it 'Can create a vendor from a POST request' do
+
+        body =  {
+            "name": "Buzzy Bees",
+            "description": "local honey and wax products",
+            "contact_name": "Berly Couwer",
+            "contact_phone": "8389928383",
+            "credit_accepted": false
+        }
+
+        post api_v0_vendors_path(body)
+        
+        expect(response).to have_http_status(201)
+
+        vendor = Vendor.first
+
+        expect(vendor.name).to eq("Buzzy Bees")
+        expect(vendor.description).to eq("local honey and wax products")
+        expect(vendor.contact_name).to eq("Berly Couwer")
+        expect(vendor.contact_phone).to eq("8389928383")
+        expect(vendor.credit_accepted).to eq(false)
+    end
+
+    it 'returns status 400 when all fields not included' do
+
+        body =  {
+            "name": "Buzzy Bees",
+            "description": "local honey and wax products",
+            "credit_accepted": false
+        }
+
+        post api_v0_vendors_path(body)
+        
+        expect(response).to have_http_status(400)
+
+        error = JSON.parse(response.body, symbolize_names: true)
+
+        expect(error[:errors]).to eq("Validation failed: Contact name can't be blank, Contact phone can't be blank")
+    end
+
+    it 'can delete a vendor' do
+
+        create(:vendor)
+        vendor = Vendor.first
+
+        expect(vendor).to be_a(Vendor)
+
+        delete api_v0_vendor_path(vendor)
+
+        expect(response).to have_http_status(204)
+
+        expect(Vendor.all).to eq([])
+    end
+
+    it 'returns status 404 if trying to delete a missing vendor' do
+        delete api_v0_vendor_path(123123123123)
+
+        expect(response).to have_http_status(404)
+
+        error = JSON.parse(response.body, symbolize_names: true)
+
+        expect(error[:errors]).to eq("Couldn't find Vendor with 'id'=123123123123")
     end
 end
