@@ -113,4 +113,86 @@ RSpec.describe Vendor, type: :request do
 
         expect(error[:errors]).to eq("Couldn't find Vendor with 'id'=123123123123")
     end
+
+    it 'can update an existing vendor' do
+        body =  {
+            "name": "Buzzy Bees",
+            "description": "local honey and wax products",
+            "contact_name": "Berly Couwer",
+            "contact_phone": "8389928383",
+            "credit_accepted": false
+        }
+
+        update_body =  {
+            "name": "All Tails Wag",
+            "description": "Animal Shelter",
+        }
+
+        post api_v0_vendors_path(body)
+        
+        expect(response).to have_http_status(201)
+
+        vendor = Vendor.first
+
+        expect(vendor.name).to eq("Buzzy Bees")
+        expect(vendor.description).to eq("local honey and wax products")
+        expect(vendor.contact_name).to eq("Berly Couwer")
+        expect(vendor.contact_phone).to eq("8389928383")
+        expect(vendor.credit_accepted).to eq(false)
+
+        patch api_v0_vendor_path(vendor, update_body)
+
+        vendor = Vendor.first
+
+        expect(vendor.name).to eq("All Tails Wag")
+        expect(vendor.description).to eq('Animal Shelter')
+        expect(vendor.contact_name).to eq("Berly Couwer")
+        expect(vendor.contact_phone).to eq("8389928383")
+        expect(vendor.credit_accepted).to eq(false)
+    end
+
+    it 'returns status code 404 when updating a non exisant vendor' do
+
+        update_body =  {
+            "name": "All Tails Wag",
+            "description": "Animal Shelter",
+        }
+
+        patch api_v0_vendor_path(121351212)
+
+        expect(response).to have_http_status(404)
+
+        error = JSON.parse(response.body, symbolize_names: true)
+
+        expect(error[:errors]).to eq("Couldn't find Vendor with 'id'=121351212")
+    end
+    it 'returns status code 400 when updating a vendor with empty fields' do
+
+        body =  {
+            "name": "Buzzy Bees",
+            "description": "local honey and wax products",
+            "contact_name": "Berly Couwer",
+            "contact_phone": "8389928383",
+            "credit_accepted": false
+        }
+
+        update_body =  {
+            "name": "",
+            "description": "Animal Shelter",
+        }
+
+        post api_v0_vendors_path(body)
+        
+        expect(response).to have_http_status(201)
+
+        vendor = Vendor.first
+
+        patch api_v0_vendor_path(vendor, update_body)
+
+        expect(response).to have_http_status(400)
+
+        error = JSON.parse(response.body, symbolize_names: true)
+
+        expect(error[:errors]).to eq("Validation failed: Name can't be blank")
+    end
 end

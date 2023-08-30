@@ -17,7 +17,7 @@ class Api::V0::VendorsController < ApplicationController
 
     def create
         begin
-            render json: VendorSerializer.new(Vendor.create!(create_params)), status: :created
+            render json: VendorSerializer.new(Vendor.create!(vendor_params)), status: :created
         rescue ActiveRecord::RecordInvalid => e
             render :json => { errors: e.message }, status: :bad_request
         end
@@ -25,15 +25,27 @@ class Api::V0::VendorsController < ApplicationController
 
     def destroy
         begin
-            Vendor.destroy(params[:id])
+            Vendor.find(params[:id]).destroy
         rescue ActiveRecord::RecordNotFound => e
             render :json => { errors: e.message }, status: :not_found 
         end
     end
 
+    def update
+        begin
+            vendor = Vendor.find(params[:id])
+            vendor.update!(vendor_params)
+            render json: VendorSerializer.new(vendor)
+        rescue ActiveRecord::RecordNotFound => e
+            render :json => { errors: e.message }, status: :not_found 
+        rescue ActiveRecord::RecordInvalid => e
+            render :json => { errors: e.message }, status: :bad_request
+        end
+    end
+
     private
 
-    def create_params
+    def vendor_params
         params.permit(:contact_name, :contact_phone, :description, :name, :credit_accepted)
     end
 end
