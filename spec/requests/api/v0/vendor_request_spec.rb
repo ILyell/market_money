@@ -1,6 +1,11 @@
 require 'rails_helper'
 
 RSpec.describe Vendor, type: :request do
+
+    before(:each) do
+        @headers = {"CONTENT_TYPE" => "application/json"}
+    end
+
     it 'sends a vendor from an id' do
         create(:vendor)
         vendor = Vendor.first
@@ -31,7 +36,7 @@ RSpec.describe Vendor, type: :request do
         expect(vendor[:attributes]).to have_key(:contact_name)
         expect(vendor[:attributes][:contact_name]).to be_an(String)
 
-            expect(vendor[:attributes]).to have_key(:contact_phone)
+        expect(vendor[:attributes]).to have_key(:contact_phone)
         expect(vendor[:attributes][:contact_phone]).to be_an(String)
 
         expect(vendor[:attributes]).to have_key(:credit_accepted)
@@ -60,7 +65,8 @@ RSpec.describe Vendor, type: :request do
             "credit_accepted": false
         }
 
-        post api_v0_vendors_path(body)
+        post api_v0_vendors_path, headers: @headers, params: JSON.generate(vendor: body)
+
         
         expect(response).to have_http_status(201)
 
@@ -81,7 +87,7 @@ RSpec.describe Vendor, type: :request do
             "credit_accepted": false
         }
 
-        post api_v0_vendors_path(body)
+        post api_v0_vendors_path, headers: @headers, params: JSON.generate(vendor: body)
         
         expect(response).to have_http_status(400)
 
@@ -115,6 +121,9 @@ RSpec.describe Vendor, type: :request do
     end
 
     it 'can update an existing vendor' do
+
+        headers = {"CONTENT_TYPE" => "application/json"}
+
         body =  {
             "name": "Buzzy Bees",
             "description": "local honey and wax products",
@@ -123,12 +132,12 @@ RSpec.describe Vendor, type: :request do
             "credit_accepted": false
         }
 
-        update_body =  {
+        update_body =  { 
             "name": "All Tails Wag",
             "description": "Animal Shelter",
         }
 
-        post api_v0_vendors_path(body)
+        post api_v0_vendors_path, headers: headers, params: JSON.generate(vendor: body)
         
         expect(response).to have_http_status(201)
 
@@ -140,7 +149,8 @@ RSpec.describe Vendor, type: :request do
         expect(vendor.contact_phone).to eq("8389928383")
         expect(vendor.credit_accepted).to eq(false)
 
-        patch api_v0_vendor_path(vendor, update_body)
+        patch api_v0_vendor_path(vendor.id), headers: headers, params: JSON.generate(vendor: update_body)
+
 
         vendor = Vendor.first
 
@@ -181,13 +191,15 @@ RSpec.describe Vendor, type: :request do
             "description": "Animal Shelter",
         }
 
-        post api_v0_vendors_path(body)
+        post api_v0_vendors_path, headers: @headers, params: JSON.generate(vendor: body)
+
         
         expect(response).to have_http_status(201)
 
         vendor = Vendor.first
 
-        patch api_v0_vendor_path(vendor, update_body)
+        patch api_v0_vendor_path(vendor.id), headers: @headers, params: JSON.generate(vendor: update_body)
+
 
         expect(response).to have_http_status(400)
 
