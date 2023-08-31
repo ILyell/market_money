@@ -1,47 +1,62 @@
 require 'rails_helper' 
 
 RSpec.describe MarketVendor, type: :request do
+    before(:each) do
+        @headers = {"CONTENT_TYPE" => "application/json"}
+        create(:market)
+        create(:vendor)
+
+        @market = Market.first
+        @vendor = Vendor.first
+
+    end
     describe 'Market Vendor CRUD' do
         it 'can create a MarketVendor from an api call' do
-            create(:market)
-            create(:vendor)
 
-            market = Market.first
-            vendor = Vendor.first
-            
-            expect(market.vendors).to eq([])
+        body = {
+            "market_id": "#{@market.id}",
+            "vendor_id": "#{@vendor.id}"
+        }
+        
+            expect(@market.vendors).to eq([])
 
-            post "/api/v0/market_vendors/?vendor_id=#{vendor.id}&market_id=#{market.id}"
+            post api_v0_join_table_market_vendors_path, headers: @headers, params: JSON.generate(body)
             
-            market.reload
+            @market.reload
 
             expect(response).to have_http_status(201)
 
             # expect(response.body).to eq("Successfully added vendor to market")
 
-            expect(market.vendors).to eq([vendor])  
+            expect(@market.vendors).to eq([@vendor])  
 
-            get api_v0_market_vendors_path(market)
+            get api_v0_market_vendors_path(@market)
 
             vendors = JSON.parse(response.body, symbolize_names: true) 
-    
+
             expect(vendors).to have_key(:data)
             expect(vendors[:data].count).to eq(1)
             
         end
 
         it 'returns status 404 if market_id or vendor_id isnt a valid id' do
-            create(:market)
-            create(:vendor)
 
-            market = Market.first
-            vendor = Vendor.first
+            body_1 = {
+                "market_id": "1223213",
+                "vendor_id": "#{@vendor.id}"
+            }
+
+            body_2 = {
+                "market_id": "#{@market.id}",
+                "vendor_id": "12312443"
+            }
             
-            post "/api/v0/market_vendors/?vendor_id=#{vendor.id}&market_id=#{121542}"
+            post api_v0_join_table_market_vendors_path, headers: @headers, params: JSON.generate(body_1)
+
             
             expect(response).to have_http_status(404)
 
-            post "/api/v0/market_vendors/?vendor_id=#{32154}&market_id=#{market.id}"
+            post api_v0_join_table_market_vendors_path, headers: @headers, params: JSON.generate(body_2)
 
             expect(response).to have_http_status(404)
 
@@ -49,21 +64,21 @@ RSpec.describe MarketVendor, type: :request do
         end
 
         it 'returns status 422 if the market_vendor already exist' do
-            create(:market)
-            create(:vendor)
 
-            market = Market.first
-            vendor = Vendor.first
+            body = {
+                "market_id": "#{@market.id}",
+                "vendor_id": "#{@vendor.id}"
+            }
             
-            expect(market.vendors).to eq([])
+            expect(@market.vendors).to eq([])
 
-            post "/api/v0/market_vendors/?vendor_id=#{vendor.id}&market_id=#{market.id}"
+            post api_v0_join_table_market_vendors_path, headers: @headers, params: JSON.generate(body)
             
-            market.reload
+            @market.reload
 
             expect(response).to have_http_status(201)
 
-            post "/api/v0/market_vendors/?vendor_id=#{vendor.id}&market_id=#{market.id}"
+            post api_v0_join_table_market_vendors_path, headers: @headers, params: JSON.generate(body)
 
             expect(response).to have_http_status(422)
 
@@ -71,19 +86,19 @@ RSpec.describe MarketVendor, type: :request do
         end
 
         it 'can delete a market vendor from an api call' do
-            create(:market)
-            create(:vendor)
 
-            market = Market.first
-            vendor = Vendor.first
-
-            create(:market_vendor, market_id: market.id, vendor_id: vendor.id)
+            body = {
+                "market_id": "#{@market.id}",
+                "vendor_id": "#{@vendor.id}"
+            }
+            
+            create(:market_vendor, market_id: @market.id, vendor_id: @vendor.id)
 
             market_vendor = MarketVendor.first
-
+            # binding.pry
             expect(market_vendor).to be_a(MarketVendor)
 
-            delete "/api/v0/market_vendors/?vendor_id=#{vendor.id}&market_id=#{market.id}"
+            delete api_v0_join_table_market_vendors_path, headers: @headers, params: JSON.generate(body)
 
             expect(response).to have_http_status(204)
 
@@ -95,7 +110,12 @@ RSpec.describe MarketVendor, type: :request do
 
         it 'returns status 404 if no market vendor exist with that vendor_id and market_id' do
 
-            delete "/api/v0/market_vendors/?vendor_id=#{12}&market_id=#{12}"
+            body = {
+                "market_id": "#{@market.id}",
+                "vendor_id": "#{@vendor.id}"
+            }
+
+            delete api_v0_join_table_market_vendors_path, headers: @headers, params: JSON.generate(body)
 
             expect(response).to have_http_status(404)
 
