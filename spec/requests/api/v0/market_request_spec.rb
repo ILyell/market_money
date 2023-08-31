@@ -162,4 +162,29 @@ describe Market, type: :request do
         expect(response).to have_http_status(404)
 
     end
+
+    it 'Can search by valid params' do
+        headers = {"CONTENT_TYPE" => "application/json"}
+
+        create(:market, name: "Nob Hill Growers' Market", city: "Albuquerque", state: "New Mexico")
+        create_list(:market, 100)
+        market = Market.first
+
+        body_1 =  {"name": "Nob Hill"} 
+        body_2 = {
+                "state": "New Mexico",
+                "city": "Albuquerque"
+            }
+        get api_v0_markets_search_path, headers: headers, params: body_1
+
+        expect(response).to have_http_status(422)
+
+        get api_v0_markets_search_path, headers: headers, params: body_2
+
+        expect(response).to have_http_status(201)
+        
+        markets = JSON.parse(response.body)
+        binding.pry
+        
+    end
 end
